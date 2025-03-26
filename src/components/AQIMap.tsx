@@ -2,16 +2,17 @@ import { MapContainer, TileLayer, Circle, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Define Property Type
-interface Property {
+interface AQIStation {
   id: string;
   address: string;
   latitude: number;
   longitude: number;
-  aqi?: number; // AQI can be undefined
+  aqi: number;
 }
 
+// Define Props Type
 interface AQIMapProps {
-  properties: Property[];
+  properties: AQIStation[];
 }
 
 export default function AQIMap({ properties }: AQIMapProps) {
@@ -19,7 +20,7 @@ export default function AQIMap({ properties }: AQIMapProps) {
 
   // Ensure at least one valid AQI station exists
   const validProperties = properties.filter(
-    (station) => station.latitude && station.longitude && station.aqi !== undefined && !isNaN(station.aqi)
+    (station) => station.latitude !== undefined && station.longitude !== undefined && !isNaN(station.aqi)
   );
 
   if (validProperties.length === 0) {
@@ -37,14 +38,14 @@ export default function AQIMap({ properties }: AQIMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
-        {validProperties.map((station) => (
+        {validProperties.map((station: AQIStation) => (
           <Circle
             key={station.id}
             center={[station.latitude, station.longitude]}
-            radius={station.aqi! * 10} // Ensure AQI is valid
+            radius={550} // Scale size
             pathOptions={{
-              color: getAQIColor(station.aqi!),
-              fillColor: getAQIColor(station.aqi!),
+              color: getAQIColor(station.aqi),
+              fillColor: getAQIColor(station.aqi),
               fillOpacity: 0.6,
             }}
           >
