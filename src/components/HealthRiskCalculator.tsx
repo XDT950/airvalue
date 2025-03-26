@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// Base health cost per month depending on AQI level (in ₹)
+const API_KEY = "9bd1c327b0c64ebb1e7e8a3f3bc8e9f13c315c09"; // Replace with your API key
+
 const AQI_HEALTH_COST_PER_MONTH = {
   good: 50,
   moderate: 250,
@@ -10,7 +11,6 @@ const AQI_HEALTH_COST_PER_MONTH = {
   hazardous: 10000,
 };
 
-// Health conditions risk multipliers
 const HEALTH_CONDITION_MULTIPLIERS: Record<string, number> = {
   "None": 1,
   "Asthma": 1.5,
@@ -31,86 +31,68 @@ const getHealthCategory = (aqi: number): { category: string; baseCost: number } 
   return { category: "Hazardous", baseCost: AQI_HEALTH_COST_PER_MONTH.hazardous };
 };
 
-export default function HealthRiskCalculator({ aqi }: { aqi: number }) {
-  const [age, setAge] = useState<number>(25);
-  const [hoursOutside, setHoursOutside] = useState<number>(2);
-  const [healthCondition, setHealthCondition] = useState<string>("None");
-  const [healthCost, setHealthCost] = useState<number>(0);
+// Function to fetch AQI for a given area
+const fetchAQIByArea = async (area: string): Promise<number | null> => {
+  const url = `https://api.waqi.info/search/?token=${API_KEY}&keyword=${area}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (data.status === "ok" && data.data.length > 0) {
+    return parseInt(data.data[0].aqi) || null;
+  }
+  return null;
+};
+
+export default function HealthRiskCalculator({ area, age, hoursOutside, healthCondition }: { area: string; age: number; hoursOutside: number; healthCondition: string }) {
+  const [aqi, setAqi] = useState<number | null>(null);
+  const [healthCost, setHealthCost] = useState<number | null>(null);
   const [category, setCategory] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const calculateHealthCost = () => {
-    const { category, baseCost } = getHealthCategory(aqi);
+  useEffect(() => {
+    const calculateHealthCost = async () => {
+      setLoading(true);
 
-    // Adjust health cost based on exposure time (per month)
-    const exposureFactor = hoursOutside / 4; // 4 hours/day is the baseline
-    const ageFactor = age > 50 ? 1.5 : 1; // Higher cost for older individuals
-    const conditionFactor = HEALTH_CONDITION_MULTIPLIERS[healthCondition] || 1;
+      // Fetch AQI for the entered area
+      const fetchedAqi = await fetchAQIByArea(area);
 
-    const adjustedCostPerMonth = baseCost * exposureFactor * ageFactor * conditionFactor;
-    const yearlyCost = adjustedCostPerMonth * 12; // Multiply by 12 months
+      if (fetchedAqi === null) {
+        alert("AQI data not found for this area. Please try another.");
+        setLoading(false);
+        return;
+      }
 
-    setHealthCost(yearlyCost);
-    setCategory(category);
-  };
+      setAqi(fetchedAqi);
+
+      // Calculate cost based on AQI
+      const { category, baseCost } = getHealthCategory(fetchedAqi);
+      const exposureFactor = hoursOutside / 4; // 4 hours/day is baseline
+      const ageFactor = age > 50 ? 1.5 : 1;
+      const conditionFactor = HEALTH_CONDITION_MULTIPLIERS[healthCondition] || 1;
+
+      const adjustedCostPerMonth = baseCost * exposureFactor * ageFactor * conditionFactor;
+      const yearlyCost = adjustedCostPerMonth * 12; // Multiply by 12 months
+
+      setHealthCost(yearlyCost);
+      setCategory(category);
+      setLoading(false);
+    };
+
+    calculateHealthCost();
+  }, [area, age, hoursOutside, healthCondition]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">🏥 Health Risk Calculator</h2>
-
-      {/* Age Input */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-semibold text-lg mb-2">🎂 Enter Your Age:</label>
-        <input
-          type="number"
-          className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
-          placeholder="Age"
-          value={age}
-          onChange={(e) => setAge(Number(e.target.value))}
-        />
-      </div>
-
-      {/* Hours Outside Input */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-semibold text-lg mb-2">⏳ How Many Hours Are You Outside Daily?</label>
-        <input
-          type="number"
-          className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
-          placeholder="Hours Outside"
-          value={hoursOutside}
-          onChange={(e) => setHoursOutside(Number(e.target.value))}
-        />
-      </div>
-
-      {/* Health Condition Input */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-semibold text-lg mb-2">💉 Do You Have Any Health Conditions?</label>
-        <select
-          className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
-          value={healthCondition}
-          onChange={(e) => setHealthCondition(e.target.value)}
-        >
-          {Object.keys(HEALTH_CONDITION_MULTIPLIERS).map((condition) => (
-            <option key={condition} value={condition}>
-              {condition}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Calculate Button */}
-      <button
-        onClick={calculateHealthCost}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
-      >
-        Calculate Health Cost
-      </button>
-
-      {/* Results */}
-      {healthCost > 0 && (
-        <div className="mt-6 p-4 rounded-lg shadow-lg bg-gray-100">
+    <div className="mt-6 p-4 rounded-lg shadow-lg bg-gray-100">
+      {loading ? (
+        <p className="text-lg font-bold text-gray-700">Fetching AQI & Calculating Cost...</p>
+      ) : healthCost !== null ? (
+        <>
+          <h3 className="text-xl font-bold">🌡️ AQI for {area}: {aqi}</h3>
           <h3 className="text-xl font-bold">🌡️ AQI Level: {category}</h3>
           <p className="text-lg text-gray-800">💸 Estimated Yearly Health Cost: <strong>₹{healthCost.toLocaleString()}</strong></p>
-        </div>
+        </>
+      ) : (
+        <p className="text-lg font-bold text-red-600">⚠️ Unable to fetch AQI data. Please try again.</p>
       )}
     </div>
   );

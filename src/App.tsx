@@ -20,16 +20,27 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-200 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-200 transition-all duration-300">
+          {/* 🌍 Global Navigation */}
           <Navbar />
-          <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <Routes>
-              <Route path="/" element={<PropertyList />} />
-              <Route path="/map" element={<AQIHeatmap />} />
-              <Route path="/health" element={<HealthAssessment />} />
-              <Route path="/about" element={<About />} />
-            </Routes>
+
+          {/* 🏠 Main Content Area */}
+          <main className="flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8 mt-6">
+            <div className="w-full max-w-6xl bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8 md:p-10 transition-all duration-300">
+              <Routes>
+                <Route path="/" element={<PropertyList />} />
+                <Route path="/map" element={<AQIHeatmap />} />
+                <Route path="/health" element={<HealthAssessment />} />
+                <Route path="/about" element={<About />} />
+              </Routes>
+            </div>
           </main>
+
+          {/* 🌟 Footer */}
+          <footer className="w-full py-6 mt-10 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-center shadow-lg rounded-t-xl">
+            <p className="text-lg font-semibold">© {new Date().getFullYear()} Air Quality & Property Evaluator</p>
+            <p className="text-sm opacity-90">Designed for better living.</p>
+          </footer>
         </div>
       </Router>
       <ReactQueryDevtools initialIsOpen={false} />
