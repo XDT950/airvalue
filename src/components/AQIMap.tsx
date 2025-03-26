@@ -1,81 +1,71 @@
-// import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
-// import 'leaflet/dist/leaflet.css';
-// import { Property, AQIData } from '../types';
-
-// interface AQIMapProps {
-//   properties: Property[];
-//   aqiData: Record<string, AQIData>;
-// }
-
-// export default function AQIMap({ properties, aqiData }: AQIMapProps) {
-//   const center = { lat: 28.6139, lng: 77.2090 }; // Delhi coordinates
-
-//   return (
-//     <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-lg">
-//       <MapContainer
-//         center={[center.lat, center.lng]}
-//         zoom={12}
-//         className="h-full w-full"
-//       >
-//         <TileLayer
-//           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-//           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-//         />
-        
-//         {properties.map((property) => {
-//           const aqi = aqiData[property.id];
-//           return (
-//             <Circle
-//               key={property.id}
-//               center={[property.latitude, property.longitude]}
-//               radius={500}
-//               pathOptions={{
-//                 color: aqi.color,
-//                 fillColor: aqi.color,
-//                 fillOpacity: 0.4
-//               }}
-//             >
-//               <Popup>
-//                 <div className="p-2">
-//                   <h3 className="font-semibold">{property.address}</h3>
-//                   <p>AQI: {aqi.value}</p>
-//                   <p>Category: {aqi.category}</p>
-//                 </div>
-//               </Popup>
-//             </Circle>
-//           );
-//         })}
-//       </MapContainer>
-//     </div>
-//   );
-// }
-
-import { useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Circle, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+// Define Property Type
+interface Property {
+  id: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  aqi?: number; // AQI can be undefined
+}
+
 interface AQIMapProps {
-  onLocationSelect: (lat: number, lon: number) => void;
+  properties: Property[];
 }
 
-function LocationMarker({ onLocationSelect }: AQIMapProps) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
+export default function AQIMap({ properties }: AQIMapProps) {
+  if (properties.length === 0) return <p className="text-center">No AQI data available.</p>;
 
-  useMapEvents({
-    click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
+  // Ensure at least one valid AQI station exists
+  const validProperties = properties.filter(
+    (station) => station.latitude && station.longitude && station.aqi !== undefined && !isNaN(station.aqi)
+  );
 
-  return position ? <Marker position={position} /> : null;
-}
+  if (validProperties.length === 0) {
+    return <p className="text-center text-red-500">No valid AQI data available.</p>;
+  }
 
-export default function AQIMap({ onLocationSelect }: AQIMapProps) {
+  // Center the map on the first valid station
+  const center: [number, number] = [validProperties[0].latitude, validProperties[0].longitude];
+
   return (
-    <MapContainer center={[20.5937, 78.9629]} zoom={5} className="h-64 w-full rounded-md">
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <LocationMarker onLocationSelect={onLocationSelect} />
-    </MapContainer>
+    <div className="h-[500px] w-full rounded-lg overflow-hidden shadow-lg">
+      <MapContainer center={center} zoom={11} className="h-full w-full">
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+
+        {validProperties.map((station) => (
+          <Circle
+            key={station.id}
+            center={[station.latitude, station.longitude]}
+            radius={station.aqi! * 10} // Ensure AQI is valid
+            pathOptions={{
+              color: getAQIColor(station.aqi!),
+              fillColor: getAQIColor(station.aqi!),
+              fillOpacity: 0.6,
+            }}
+          >
+            <Popup>
+              <h3 className="font-semibold">{station.address}</h3>
+              <p>AQI: {station.aqi}</p>
+            </Popup>
+          </Circle>
+        ))}
+      </MapContainer>
+    </div>
   );
 }
+
+// Function to determine AQI color
+const getAQIColor = (aqi: number): string => {
+  if (aqi <= 50) return "#00E400"; // Green (Good)
+  if (aqi <= 100) return "#FFFF00"; // Yellow (Moderate)
+  if (aqi <= 150) return "#FF7E00"; // Orange (Unhealthy for Sensitive)
+  if (aqi <= 200) return "#FF0000"; // Red (Unhealthy)
+  if (aqi <= 300) return "#8F3F97"; // Purple (Very Unhealthy)
+  return "#7E0023"; // Maroon (Hazardous)
+};
+
