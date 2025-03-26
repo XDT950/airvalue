@@ -42,7 +42,7 @@ export default function AQIMap({ properties }: AQIMapProps) {
           <Circle
             key={station.id}
             center={[station.latitude, station.longitude]}
-            radius={550} // Scale size
+            radius={650} // Scale size
             pathOptions={{
               color: getAQIColor(station.aqi),
               fillColor: getAQIColor(station.aqi),
