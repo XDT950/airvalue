@@ -25,28 +25,6 @@ const fetchAQIStations = async (city: string) => {
   }));
 };
 
-// Function to fetch AQI for a selected station
-const fetchAQIData = async (latitude: number, longitude: number) => {
-  const url = `https://api.waqi.info/feed/geo:${latitude};${longitude}/?token=${API_KEY}`;
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (data.status !== "ok") {
-    console.error("Failed to fetch AQI data:", data);
-    return null;
-  }
-  const aqiValues = data.data.forecast?.daily?.pm25?.slice(0, 7).map((day: any) => day.avg) || [];
-  if (aqiValues.length === 0) return null;
-  
-  const avgAQI = Math.round(aqiValues.reduce((sum: any, val: any)=>sum+val, 0)/aqiValues.length);
-  return {
-      value: avgAQI || 0,
-      category: getAQICategory(avgAQI || 0),
-      color: getAQIColor(avgAQI || 0),
-      healthImplications: getHealthImplications(avgAQI || 0),
-  }
-};
-
 // Helper functions for AQI categories & colors
 const getAQICategory = (aqi: number): string => {
   if (aqi <= 50) return "Good";
@@ -75,6 +53,30 @@ const getHealthImplications = (aqi: number): string => {
   return "Health warning: emergency conditions.";
 };
 
+// Function to fetch AQI for a selected station
+const fetchAQIData = async (latitude: number, longitude: number) => {
+  const url = `https://api.waqi.info/feed/geo:${latitude};${longitude}/?token=${API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (data.status !== "ok") {
+    console.error("Failed to fetch AQI data:", data);
+    return null;
+  }
+  const aqiValues:any = data.data.forecast?.daily?.pm25?.slice(0, 7).map((day: any) => day.avg) || [];
+  if (aqiValues.length === 0) return null;
+  
+  const avgAQI = Math.round(aqiValues.reduce((sum: any, val: any)=>sum+val, 0)/aqiValues.length);
+  return {
+      value: avgAQI || 0,
+      category: getAQICategory(avgAQI || 0),
+      color: getAQIColor(avgAQI || 0),
+      healthImplications: getHealthImplications(avgAQI || 0),
+  }
+};
+
+
+
 export default function PropertyList() {
   const [selectedCity, setSelectedCity] = useState("Delhi");
   const [selectedStation, setSelectedStation] = useState<any>(null);
@@ -98,6 +100,7 @@ export default function PropertyList() {
   // Calculate adjusted price based on AQI
   const calculateAdjustedPrice = () => {
     // If no AQI data is available, return the original property price
+    // If no AQI data is available, return the original property price
     if (!aqiData) return propertyPrice;
   
     // Define AQI impact thresholds and corresponding price reduction percentages
@@ -116,7 +119,7 @@ export default function PropertyList() {
     );
   
     // Apply a non-linear reduction to create a more gradual impact
-    const baseReduction = impactLevel?.priceReduction || 0;
+    const baseReduction = impactLevel.priceReduction;
     const nonLinearFactor = Math.sqrt(aqiData.value / 50);
     const adjustedReduction = baseReduction * nonLinearFactor;
   
@@ -176,6 +179,7 @@ export default function PropertyList() {
       {/* Property Inputs */}
       <div className="mb-6">
         <label className="block text-gray-700 font-semibold text-lg mb-2">🏡 Enter Property Price:</label>
+        <label className="block text-gray-700 font-semibold text-lg mb-2">🏡 Enter Property Price:</label>
         <input
           type="number"
           className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
@@ -198,3 +202,4 @@ export default function PropertyList() {
     </div>
   );
 }
+

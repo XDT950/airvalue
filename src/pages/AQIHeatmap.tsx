@@ -68,48 +68,42 @@ export default function AQIHeatmap() {
   }, [selectedCity]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">
-        🌍 City AQI Heatmap (Stations)
-      </h2>
-
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">🌍 City AQI Heatmap (Stations)</h2>
+      
       {/* City Selector */}
       <div className="mb-6">
-        <label className="block text-gray-700 font-semibold text-lg mb-2">
-          🏙️ Select a City:
-        </label>
+        <label className="block text-gray-800 font-semibold text-lg mb-2">🏙️ Select a City:</label>
         <select
-          className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
+          className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm text-gray-800"
           value={selectedCity}
           onChange={(e) => setSelectedCity(e.target.value)}
         >
           {CITIES.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
+            <option key={city} value={city}>{city}</option>
           ))}
         </select>
       </div>
       
       {/* AQI Legend and Map */}
       <div className="flex gap-6">
-         <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-md text-gray-900">
-           <h3 className="text-lg font-bold mb-2">AQI Legend</h3>
-           <ul className="text-sm">
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-green-500 inline-block mr-2"></span> <span className="text-gray-800">Good (0-50)</span></li>
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-yellow-500 inline-block mr-2"></span> <span className="text-gray-800">Moderate (51-100)</span></li>
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-orange-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy for Sensitive Groups (101-150)</span></li>
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-red-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy (151-200)</span></li>
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-purple-500 inline-block mr-2"></span> <span className="text-gray-800">Very Unhealthy (201-300)</span></li>
-             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-maroon-500 inline-block mr-2"></span> <span className="text-gray-800">Hazardous (301+)</span></li>
-           </ul>
-         </div>
-         <div className="w-3/4">
-           {loading && <p className="text-blue-600 text-center">🔄 Loading AQI data...</p>}
-           {error && <p className="text-red-600 text-center">{error}</p>}
-           {!loading && !error && <AQIMap properties={stations} />}
-         </div>
-       </div>
-     </div>
+        <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-md text-gray-900">
+          <h3 className="text-lg font-bold mb-2">AQI Legend</h3>
+          <ul className="text-sm">
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-green-500 inline-block mr-2"></span> <span className="text-gray-800">Good (0-50)</span></li>
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-yellow-500 inline-block mr-2"></span> <span className="text-gray-800">Moderate (51-100)</span></li>
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-orange-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy for Sensitive Groups (101-150)</span></li>
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-red-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy (151-200)</span></li>
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-purple-500 inline-block mr-2"></span> <span className="text-gray-800">Very Unhealthy (201-300)</span></li>
+            <li className="flex items-center mb-2"><span className="w-4 h-4 bg-maroon-500 inline-block mr-2"></span> <span className="text-gray-800">Hazardous (301+)</span></li>
+          </ul>
+        </div>
+        <div className="w-3/4">
+          {loading && <p className="text-blue-600 text-center">🔄 Loading AQI data...</p>}
+          {error && <p className="text-red-600 text-center">{error}</p>}
+          {!loading && !error && <AQIMap properties={stations} />}
+        </div>
+      </div>
+    </div>
   );
 }
