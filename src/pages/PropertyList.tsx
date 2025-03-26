@@ -31,15 +31,20 @@ const fetchAQIData = async (latitude: number, longitude: number) => {
   const response = await fetch(url);
   const data = await response.json();
 
-  if (data.status === "ok") {
-    return {
-      value: parseInt(data.data.aqi) || 0,
-      category: getAQICategory(parseInt(data.data.aqi) || 0),
-      color: getAQIColor(parseInt(data.data.aqi) || 0),
-      healthImplications: getHealthImplications(parseInt(data.data.aqi) || 0),
-    };
+  if (data.status !== "ok") {
+    console.error("Failed to fetch AQI data:", data);
+    return null;
   }
-  return null;
+  const aqiValues = data.data.forecast?.daily?.pm25?.slice(0, 7).map((day: any) => day.avg) || [];
+  if (aqiValues.length === 0) return null;
+  
+  const avgAQI = Math.round(aqiValues.reduce((sum: any, val: any)=>sum+val, 0)/aqiValues.length);
+  return {
+      value: avgAQI || 0,
+      category: getAQICategory(avgAQI || 0),
+      color: getAQIColor(avgAQI || 0),
+      healthImplications: getHealthImplications(avgAQI || 0),
+  }
 };
 
 // Helper functions for AQI categories & colors
@@ -92,9 +97,35 @@ export default function PropertyList() {
 
   // Calculate adjusted price based on AQI
   const calculateAdjustedPrice = () => {
+    // If no AQI data is available, return the original property price
     if (!aqiData) return propertyPrice;
-    const aqiImpact = Math.max(0, (aqiData.value - 50) / 200);
-    return propertyPrice * (1 - aqiImpact);
+  
+    // Define AQI impact thresholds and corresponding price reduction percentages
+    const aqiImpactLevels = [
+      { threshold: 50, priceReduction: 0 },     // Good air quality
+      { threshold: 100, priceReduction: 0.05 }, // Moderate air quality
+      { threshold: 150, priceReduction: 0.10 }, // Unhealthy for Sensitive Groups
+      { threshold: 200, priceReduction: 0.15 }, // Unhealthy
+      { threshold: 300, priceReduction: 0.25 }, // Very Unhealthy
+      { threshold: Infinity, priceReduction: 0.35 } // Hazardous
+    ];
+  
+    // Find the appropriate impact level based on AQI value
+    const impactLevel = aqiImpactLevels.find(level => 
+      aqiData.value <= level.threshold
+    );
+  
+    // Apply a non-linear reduction to create a more gradual impact
+    const baseReduction = impactLevel ? impactLevel.priceReduction : 0;
+    const nonLinearFactor = Math.sqrt(aqiData.value / 50);
+    const adjustedReduction = baseReduction * nonLinearFactor;
+  
+    // Calculate the final adjusted price
+    const adjustedPrice = propertyPrice * (1 - adjustedReduction);
+  
+    // Optional: Add a minimum price floor to prevent extreme devaluation
+    const minPriceThreshold = propertyPrice * 0.6;
+    return Math.round(Math.max(adjustedPrice, minPriceThreshold));
   };
 
   return (
@@ -144,7 +175,7 @@ export default function PropertyList() {
 
       {/* Property Inputs */}
       <div className="mb-6">
-        <label className="block text-gray-700 font-semibold text-lg mb-2">🏡 Enter Property Details:</label>
+        <label className="block text-gray-700 font-semibold text-lg mb-2">🏡 Enter Property Price:</label>
         <input
           type="number"
           className="w-full p-3 border rounded-lg bg-gray-50 text-lg font-semibold shadow-sm"
