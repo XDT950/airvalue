@@ -99,35 +99,28 @@ export default function PropertyList() {
 
   // Calculate adjusted price based on AQI
   const calculateAdjustedPrice = () => {
-    // If no AQI data is available, return the original property price
-    // If no AQI data is available, return the original property price
     if (!aqiData) return propertyPrice;
   
-    // Define AQI impact thresholds and corresponding price reduction percentages
     const aqiImpactLevels = [
-      { threshold: 50, priceReduction: 0 },     // Good air quality
-      { threshold: 100, priceReduction: 0.05 }, // Moderate air quality
-      { threshold: 150, priceReduction: 0.10 }, // Unhealthy for Sensitive Groups
-      { threshold: 200, priceReduction: 0.15 }, // Unhealthy
-      { threshold: 300, priceReduction: 0.25 }, // Very Unhealthy
-      { threshold: Infinity, priceReduction: 0.35 } // Hazardous
+      { threshold: 50, priceReduction: 0 },
+      { threshold: 100, priceReduction: 0.05 },
+      { threshold: 150, priceReduction: 0.10 },
+      { threshold: 200, priceReduction: 0.15 },
+      { threshold: 300, priceReduction: 0.25 },
+      { threshold: Infinity, priceReduction: 0.35 }
     ];
   
-    // Find the appropriate impact level based on AQI value
     const impactLevel = aqiImpactLevels.find(level => 
       aqiData.value <= level.threshold
-    );
+    ) || { priceReduction: 0 }; // ✅ Prevents undefined error
   
-    // Apply a non-linear reduction to create a more gradual impact
     const baseReduction = impactLevel.priceReduction;
     const nonLinearFactor = Math.sqrt(aqiData.value / 50);
     const adjustedReduction = baseReduction * nonLinearFactor;
   
-    // Calculate the final adjusted price
     const adjustedPrice = propertyPrice * (1 - adjustedReduction);
-  
-    // Optional: Add a minimum price floor to prevent extreme devaluation
     const minPriceThreshold = propertyPrice * 0.6;
+    
     return Math.round(Math.max(adjustedPrice, minPriceThreshold));
   };
 
