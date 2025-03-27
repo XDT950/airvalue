@@ -42,7 +42,7 @@ export default function AQIMap({ properties }: AQIMapProps) {
           <Circle
             key={station.id}
             center={[station.latitude, station.longitude]}
-            radius={550} // Scale size
+            radius={650} // Scale size
             pathOptions={{
               color: getAQIColor(station.aqi),
               fillColor: getAQIColor(station.aqi),
@@ -69,4 +69,3 @@ const getAQIColor = (aqi: number): string => {
   if (aqi <= 300) return "#8F3F97"; // Purple (Very Unhealthy)
   return "#7E0023"; // Maroon (Hazardous)
 };
-

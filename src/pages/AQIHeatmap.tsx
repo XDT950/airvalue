@@ -90,12 +90,26 @@ export default function AQIHeatmap() {
           ))}
         </select>
       </div>
-
-      {/* Show Map */}
-      {loading && <p className="text-blue-500 text-center">🔄 Loading AQI data...</p>}
-      {error && <p className="text-red-500 text-center">{error}</p>}
-
-      {!loading && !error && <AQIMap properties={stations} />}
-    </div>
+      
+      {/* AQI Legend and Map */}
+      <div className="flex gap-6">
+         <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-md text-gray-900">
+           <h3 className="text-lg font-bold mb-2">AQI Legend</h3>
+           <ul className="text-sm">
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-green-500 inline-block mr-2"></span> <span className="text-gray-800">Good (0-50)</span></li>
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-yellow-500 inline-block mr-2"></span> <span className="text-gray-800">Moderate (51-100)</span></li>
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-orange-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy for Sensitive Groups (101-150)</span></li>
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-red-500 inline-block mr-2"></span> <span className="text-gray-800">Unhealthy (151-200)</span></li>
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-purple-500 inline-block mr-2"></span> <span className="text-gray-800">Very Unhealthy (201-300)</span></li>
+             <li className="flex items-center mb-2"><span className="w-4 h-4 bg-maroon-500 inline-block mr-2"></span> <span className="text-gray-800">Hazardous (301+)</span></li>
+           </ul>
+         </div>
+         <div className="w-3/4">
+           {loading && <p className="text-blue-600 text-center">🔄 Loading AQI data...</p>}
+           {error && <p className="text-red-600 text-center">{error}</p>}
+           {!loading && !error && <AQIMap properties={stations} />}
+         </div>
+       </div>
+     </div>
   );
 }

@@ -116,7 +116,7 @@ export default function PropertyList() {
     );
   
     // Apply a non-linear reduction to create a more gradual impact
-    const baseReduction = impactLevel ? impactLevel.priceReduction : 0;
+    const baseReduction = impactLevel?.priceReduction || 0;
     const nonLinearFactor = Math.sqrt(aqiData.value / 50);
     const adjustedReduction = baseReduction * nonLinearFactor;
   
