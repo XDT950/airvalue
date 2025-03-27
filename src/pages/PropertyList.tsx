@@ -99,6 +99,7 @@ export default function PropertyList() {
 
   // Calculate adjusted price based on AQI
   const calculateAdjustedPrice = () => {
+    // If no AQI data is available, return the original property price
     if (!aqiData) return propertyPrice;
   
     const aqiImpactLevels = [
@@ -195,4 +196,5 @@ export default function PropertyList() {
     </div>
   );
 }
+
 
